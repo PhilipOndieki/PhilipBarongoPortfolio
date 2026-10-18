@@ -1,0 +1,13 @@
+.next
+out
+node_modules
+public
+package-lock.json
+# Legacy static site and media sources
+index.html
+style.css
+script.js
+*.webm
+*.png
+*.docx
+.vscode

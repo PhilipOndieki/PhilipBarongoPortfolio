@@ -1,0 +1,472 @@
+/* Scan only the app source for class names, not the legacy site or docs. */
+@import "tailwindcss" source(none);
+@source "..";
+/* `style.transition` in ScaleSettle is code, not a class name. */
+@source not inline("transition");
+@config "../../tailwind.config.ts";
+
+/* Hover styles only where hover is real: never sticky after a tap. */
+@custom-variant hover {
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      @slot;
+    }
+  }
+}
+
+/*
+ * Design tokens, defined once. tailwind.config.ts maps them to class names.
+ * Motion values come from src/lib/motion.ts (motionStyles() in <head>).
+ */
+:root {
+  --ink: #000000;
+  --fg: #ffffff;
+  --muted: #8a8a8a;
+  --divider: #262626;
+  --tile: #0d0d0d;
+  --tile-fg: #bdbdbd;
+  --chip: #1a1a1a;
+  --chip-fg: #8a8a8a;
+  --card-border: #2a2a2a;
+  --placeholder-border: #1f1f1f;
+  --placeholder-fg: #5a5a5a;
+  --clock-tick: #3a3a3a;
+  --clock-tick-major: #5a5a5a;
+  --clock-second: #e5484d;
+  --card-border-width: 1px;
+
+  --header-h: 56px;
+  --gutter: 16px;
+  --col-left: 420px;
+  /* A project stage: the viewport less the header. */
+  --stage-h: calc(100svh - var(--header-h) - env(safe-area-inset-top));
+  /* Space a stage keeps around a height-capped media frame. */
+  --stage-frame-gap: 64px;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --header-h: 63px;
+    --gutter: 20px;
+  }
+}
+
+@utility gutter-x {
+  padding-left: max(var(--gutter), env(safe-area-inset-left));
+  padding-right: max(var(--gutter), env(safe-area-inset-right));
+}
+
+@layer base {
+  html,
+  body {
+    background-color: var(--ink);
+    color: var(--fg);
+  }
+
+  html {
+    color-scheme: dark;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  a:focus-visible,
+  button:focus-visible {
+    outline: 1px solid var(--fg);
+    outline-offset: 4px;
+  }
+}
+
+@layer components {
+  /* Header monogram */
+  .monogram-fade {
+    transition: opacity var(--monogram-fade) linear;
+  }
+
+  /* Strip marquee */
+  .marquee[data-paused] .marquee-track {
+    animation-play-state: paused;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .marquee:hover .marquee-track {
+      animation-play-state: paused;
+    }
+  }
+
+  /*
+   * Project stages (WorkStack). Each stage pins under the header, is one
+   * viewport tall less the header, and is opaque, so the next stage (higher
+   * z-index, set inline) rises over it and fully replaces it. Its row sits
+   * centred in it. A stage whose content is taller (very short screens) gets
+   * data-static and scrolls normally.
+   */
+  .work-stack {
+    position: relative;
+  }
+
+  .work-stage {
+    position: sticky;
+    top: calc(var(--header-h) + env(safe-area-inset-top));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: var(--stage-h);
+    background-color: var(--ink);
+    /* Scrolling to a project lands where its stage pins. */
+    scroll-margin-top: calc(var(--header-h) + env(safe-area-inset-top));
+  }
+
+  .work-stage[data-static] {
+    position: relative;
+    top: auto;
+    height: auto;
+  }
+
+  /* Sticky off while WorkStack reads document offsets (same box, no paint). */
+  .work-stack[data-measuring] > .work-stage {
+    position: static;
+  }
+
+  /* Holds the pin top (its offsetTop) and the stage height for measuring. */
+  .work-stage-probe {
+    position: absolute;
+    top: calc(var(--header-h) + env(safe-area-inset-top));
+    left: 0;
+    width: 0;
+    height: var(--stage-h);
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  /* Media frames never taller than the stage allows; the width stays. */
+  .work-stage .reveal-anchor,
+  .work-stage .morph-anchor {
+    max-height: calc(var(--stage-h) - var(--stage-frame-gap));
+  }
+
+  /* Project row: divider, media, text on mobile; two columns from 768px. */
+  .work-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "line" "media" "text";
+  }
+
+  @media (min-width: 768px) {
+    .work-row {
+      grid-template-columns: var(--col-left) minmax(0, 1fr);
+      grid-template-rows: auto 1fr;
+      grid-template-areas: "line media" "text media";
+    }
+  }
+
+  /* The counter-slide frame enters from beyond the column: clip it to the row. */
+  .work-row:has([data-reveal-effect="counterSlide"]) {
+    overflow-x: clip;
+  }
+
+  .group-header {
+    margin-bottom: 32px;
+  }
+
+  /* Row reveal frames (src/lib/reveals). The anchor holds the layout box. */
+  .reveal-anchor {
+    position: relative;
+    aspect-ratio: 16 / 9;
+  }
+
+  .reveal-frame {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    isolation: isolate;
+    border-radius: var(--reveal-radius);
+    background-color: var(--tile);
+  }
+
+  .reveal-media {
+    position: absolute;
+    inset: 0;
+  }
+
+  .reveal-blinds {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .reveal-blinds > span {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background-color: var(--ink);
+    transform-origin: 50% 100%;
+  }
+
+  .reveal-stack-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background-color: var(--ink);
+    opacity: 0;
+  }
+
+  /* Media placeholder: text and border keep their size inside the morphing
+     frame (counter-scaled by --morph-s), so card and frame match. */
+  .media-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background-color: var(--tile);
+    box-shadow: inset 0 0 0 calc(var(--card-border-width) / var(--morph-s, 1))
+      var(--placeholder-border);
+  }
+
+  .media-placeholder-text {
+    white-space: nowrap;
+    transform: scale(calc(1 / var(--morph-s, 1)));
+  }
+
+  .work-row-deferred {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 640px;
+  }
+
+  /*
+   * Card-to-row morph. The anchor holds the full layout box (row height never
+   * changes). The lift wrapper carries the handoff rise and drop-out. The frame
+   * carries the FLIP transform; CardMorph writes --morph-s (scale),
+   * --morph-r (radius / scale) and --morph-border-opacity per frame. The
+   * defaults below are the full-size frame: 6px corners, no border.
+   */
+  .morph-anchor {
+    position: relative;
+    z-index: 10;
+    aspect-ratio: 16 / 9;
+  }
+
+  .morph-lift {
+    position: absolute;
+    inset: 0;
+  }
+
+  .morph-frame {
+    --morph-s: 1;
+    --morph-r: var(--morph-radius-end);
+    --morph-border-opacity: 0;
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    isolation: isolate;
+    background-color: var(--tile);
+    transform-origin: 0 0;
+    clip-path: inset(0 round var(--morph-r));
+  }
+
+  /* The card's 1px border, counter-scaled so it stays 1px while small. */
+  .morph-border {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    border-radius: var(--morph-r);
+    box-shadow: inset 0 0 0 calc(var(--card-border-width) / var(--morph-s)) var(--card-border);
+    opacity: var(--morph-border-opacity);
+  }
+
+  /* Project page media: fills the rest of the first screen (header, the 44px
+     Back row, and 16px above, between and below). On phones, never shorter
+     than 16:9 of its width. */
+  .project-media {
+    --back-row-h: 44px;
+    height: calc(100svh - var(--header-h) - env(safe-area-inset-top) - var(--back-row-h) - 48px);
+  }
+
+  @media (max-width: 767.98px) {
+    .project-media {
+      min-height: calc((100vw - 2 * var(--gutter)) * 9 / 16);
+    }
+  }
+
+  /* Project page text: each block fades from 20% to full once. See FadeIn. */
+  .fade-in {
+    position: relative;
+  }
+
+  .fade-in::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-color: var(--ink);
+    opacity: var(--fade-cover);
+    transition: opacity var(--fade-duration) var(--fade-easing);
+    transition-delay: calc(var(--i, 0) * var(--fade-stagger));
+  }
+
+  .fade-in[data-shown]::after {
+    opacity: 0;
+  }
+
+  /* Fallback navigation (no view transitions, or reduced motion). */
+  .route-fade-in {
+    animation: route-fade var(--route-fade-duration) ease-out both;
+  }
+
+  /* The preview card: a small copy of the frame (no padding, same border). */
+  .notification-card {
+    border-radius: var(--morph-radius-start);
+  }
+
+  .card-border {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 var(--card-border-width) var(--card-border);
+  }
+
+  /* Preview card: under the strip, lined up with one container edge. */
+  .notification-card[data-align="right"] {
+    right: max(var(--gutter), env(safe-area-inset-right));
+  }
+
+  .notification-card[data-align="left"] {
+    left: max(var(--gutter), env(safe-area-inset-left));
+  }
+
+  @media (min-width: 768px) {
+    .notification-card[data-align="left"] {
+      left: calc(max(var(--gutter), env(safe-area-inset-left)) + var(--col-left));
+    }
+  }
+
+  /* Divider line (DrawLine). Scroll-linked scaleX from src/lib/drawLines.ts;
+     undrawn by default only where motion is allowed (see the media query). */
+  .draw-line {
+    height: 1px;
+    background-color: var(--divider);
+    transform-origin: 0 50%;
+  }
+
+  /* About blocks fade with the About timing (src/lib/motion.ts `about`). */
+  .fade-in[data-timing="about"] {
+    --fade-duration: var(--about-fade-duration);
+    --fade-easing: var(--about-fade-easing);
+    --fade-cover: var(--about-fade-cover);
+    --fade-stagger: var(--about-fade-stagger);
+  }
+
+  /* Nairobi clock: hands turn about the face centre (transform only). */
+  .clock-tick {
+    stroke: var(--clock-tick);
+  }
+
+  .clock-tick-major {
+    stroke: var(--clock-tick-major);
+  }
+
+  .clock-hand {
+    stroke-linecap: round;
+    transform-box: view-box;
+    transform-origin: 50% 50%;
+  }
+
+  .clock-hour {
+    stroke: var(--muted);
+  }
+
+  .clock-minute {
+    stroke: var(--tile-fg);
+  }
+
+  .clock-second {
+    stroke: var(--clock-second);
+  }
+
+  .clock-dot {
+    fill: var(--clock-second);
+  }
+
+  /* Masked line reveal */
+  .reveal-line {
+    overflow: hidden;
+  }
+
+  .reveal-line > * {
+    display: block;
+    transform: translateY(var(--reveal-distance));
+    transition: transform var(--reveal-duration) var(--ease-out-expo);
+    transition-delay: calc(var(--i, 0) * var(--reveal-stagger));
+  }
+
+  .reveal-chip {
+    opacity: 0;
+    transform: translateY(var(--chip-distance));
+    transition:
+      opacity var(--chip-duration) ease-out,
+      transform var(--chip-duration) ease-out;
+    transition-delay: calc(var(--chip-delay) + var(--i, 0) * var(--chip-stagger));
+  }
+
+  [data-reveal="shown"] .reveal-line > *,
+  [data-reveal="shown"] .reveal-chip {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .draw-line {
+    transform: scaleX(0);
+  }
+}
+
+/* Reduced motion: a static, fully readable page. Video rules still apply. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise,
+  .marquee-track {
+    animation: none !important;
+  }
+
+  .notification-card {
+    display: none;
+  }
+
+  .fade-in::after {
+    display: none;
+  }
+
+  .reveal-line > *,
+  .reveal-chip {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .monogram-fade {
+    transition: none;
+  }
+
+  .clock-second {
+    display: none;
+  }
+}
+
+@keyframes route-fade {
+  from {
+    opacity: 0;
+  }
+}
