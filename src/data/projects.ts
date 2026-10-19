@@ -35,7 +35,7 @@ export const projects: readonly Project[] = [
       "Siledge Industrial Solutions supplies factories and workshops in Kenya with bearings, oil seals, hydraulic and pneumatic seals, chains and sprockets, pulleys, belts and automation systems.",
       "The website puts that full range in one place. Buyers browse products by category, see what Siledge stocks, and reach the sales team in a few clicks.",
     ],
-    media: null,
+    media: getProjectMedia("siledge"),
   },
   {
     slug: "afriresearch",
