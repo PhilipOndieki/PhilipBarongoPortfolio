@@ -15,9 +15,12 @@ import { playExclusive } from "@/lib/playback";
 import { incomingTransition, resolveRouteTransition } from "@/lib/viewTransition";
 import type { ProjectMedia } from "@/types";
 
+/** The cover shows full width on the project page. */
+const COVER_SIZES_ATTR = "100vw";
+
 interface ProjectVideoProps {
   readonly slug: string;
-  /** Null: the "Preview coming soon" placeholder fills the media area. */
+  /** Null: the "Preview coming soon" placeholder fills the media area (no current project). */
   readonly media: ProjectMedia | null;
   readonly name: string;
   readonly labels: {
@@ -37,14 +40,19 @@ function PlayIcon({ playing }: { readonly playing: boolean }) {
 }
 
 /**
- * The project page media: a full-width autoplaying preview (MP4 only), with
- * the poster underneath from the first paint. It is the view transition's
- * shared element, and resolves an incoming transition once it is in place.
+ * The project page media, two layers in one frame: the project's cover from
+ * the first paint, and over it (when the project has a video) the autoplaying
+ * MP4 preview. The video starts transparent and fades in when it first plays,
+ * so the transition morphs cover into cover and the video arrives after. The
+ * frame is the view transition's shared element, and resolves an incoming
+ * transition once the cover is in place.
  */
 export function ProjectVideo({ slug, media, name, labels, className = "" }: ProjectVideoProps) {
   const boxRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [userPlaying, setUserPlaying] = useState(false);
+  // One-way: once the video has played, it stays over the cover.
+  const [videoShown, setVideoShown] = useState(false);
 
   const size = useMediaSize();
   const network = useNetworkQuality();
@@ -55,12 +63,13 @@ export function ProjectVideo({ slug, media, name, labels, className = "" }: Proj
     initial: true,
   });
 
-  const src = media && size && network === "ok" ? media.mp4[size] : null;
+  // Save-Data or 2G, or no video: the cover only.
+  const src = media?.video && size && network === "ok" ? media.video.mp4[size] : null;
   // Reduced motion: never autoplay, the button starts it.
   const wantsPlay = reducedMotion ? userPlaying : true;
 
   // The new page is ready for the transition once this media is in place
-  // (the poster is decoded, so the capture is not blank).
+  // (the cover is decoded, so the capture is not blank).
   useLayoutEffect(() => {
     if (incomingTransition()?.direction !== "toProject") return;
     const image = boxRef.current?.querySelector("img");
@@ -98,30 +107,39 @@ export function ProjectVideo({ slug, media, name, labels, className = "" }: Proj
         <>
           <Poster
             media={media}
-            width={MEDIA_BOX.width}
-            height={MEDIA_BOX.height}
+            sizes={COVER_SIZES_ATTR}
             loading="eager"
             priority
-            className="absolute inset-0 h-full w-full object-cover object-center"
+            className="absolute inset-0 h-full w-full"
           />
-          <video
-            ref={videoRef}
-            muted
-            loop
-            playsInline
-            autoPlay={!reducedMotion}
-            preload="metadata"
-            poster={size ? media.poster[size] : undefined}
-            width={MEDIA_BOX.width}
-            height={MEDIA_BOX.height}
-            aria-hidden="true"
-            tabIndex={-1}
-            disablePictureInPicture
-            disableRemotePlayback
-            className="absolute inset-0 h-full w-full object-cover object-center"
-          >
-            {src ? <source src={src} type="video/mp4" /> : null}
-          </video>
+          {src ? (
+            <video
+              ref={videoRef}
+              muted
+              loop
+              playsInline
+              autoPlay={!reducedMotion}
+              preload="metadata"
+              poster={media.cover["1280"]}
+              width={MEDIA_BOX.width}
+              height={MEDIA_BOX.height}
+              aria-hidden="true"
+              tabIndex={-1}
+              disablePictureInPicture
+              disableRemotePlayback
+              onPlaying={() => setVideoShown(true)}
+              className="absolute inset-0 h-full w-full object-cover object-center"
+              style={{
+                opacity: videoShown ? 1 : 0,
+                // Reduced motion: shown at once when the user presses play.
+                transition: reducedMotion
+                  ? "none"
+                  : `opacity ${projectPage.videoFadeIn}ms ${projectPage.videoFadeEasing}`,
+              }}
+            >
+              <source src={src} type="video/mp4" />
+            </video>
+          ) : null}
         </>
       ) : (
         <MediaPlaceholder name={name} label={labels.placeholder} />
@@ -129,7 +147,11 @@ export function ProjectVideo({ slug, media, name, labels, className = "" }: Proj
       {reducedMotion && src ? (
         <button
           type="button"
-          onClick={() => setUserPlaying((playing) => !playing)}
+          onClick={() => {
+            // Reduced motion: the video shows at once on play (its poster is the cover).
+            setVideoShown(true);
+            setUserPlaying((playing) => !playing);
+          }}
           aria-label={userPlaying ? labels.pause : labels.play}
           className="absolute bottom-4 left-4 flex size-11 touch-manipulation items-center justify-center rounded-[22px] bg-ink/60 text-fg"
         >

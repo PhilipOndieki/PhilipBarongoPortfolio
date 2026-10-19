@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: ProjectPageProps): Promise<Me
     openGraph: {
       title,
       description: project.tagline,
-      images: project.media ? [{ url: project.media.poster["1280"] }] : undefined,
+      images: project.media ? [{ url: project.media.cover["1280"] }] : undefined,
     },
   };
 }

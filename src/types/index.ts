@@ -1,11 +1,16 @@
-/** Rendition widths produced by `npm run media`. */
+/** Video rendition widths produced by `npm run media`. */
 export type MediaSize = "720" | "1280";
 
 export type BySize<T> = Readonly<Record<MediaSize, T>>;
 
+/** Cover image widths (16:9 WebP). */
+export type CoverSize = "720" | "1280" | "2560";
+
 export interface ProjectMedia {
-  readonly mp4: BySize<string>;
-  readonly poster: BySize<string>;
+  /** The laptop cover: homepage row, preview card, and the project page's bottom layer. */
+  readonly cover: Readonly<Record<CoverSize, string>>;
+  /** The preview video for the project page, or null when there is none. */
+  readonly video: { readonly mp4: BySize<string> } | null;
 }
 
 /** The homepage groups, in data order. */
@@ -62,6 +67,8 @@ export interface ProjectPageCopy {
   readonly viewProject: string;
   readonly opensInNewTab: string;
   readonly playVideo: string;
+  /** Cover image alt text after the project name: "<name> website shown on a laptop". */
+  readonly coverAlt: string;
   /** Placeholder line under the project name when there is no media yet. */
   readonly previewComingSoon: string;
   readonly pauseVideo: string;

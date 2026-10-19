@@ -14,7 +14,9 @@ export const projectGroups: readonly ProjectGroup[] = [
  *      in the repository root, or pass their paths to the encoder
  *   2. run `npm run media -- <slug> [video] [poster]`
  *   3. add the entry: pick a group and a reveal that no other row uses, and
- *      set `media: getProjectMedia("<slug>")` (or null for the placeholder).
+ *      set `media: getProjectMedia("<slug>")`. Its cover goes in
+ *      public/media/work/<slug>/<slug>-cover-{720,1280,2560}.webp; with no
+ *      video, use `getProjectMedia("<slug>", { video: false })`.
  * The homepage row and /work/<slug> are built from it.
  */
 export const projects: readonly Project[] = [
@@ -166,7 +168,7 @@ export const projects: readonly Project[] = [
       "MamaShield asks one question: does a mother's education reduce child mortality in Kenya's high-malaria and remote zones? It won Best Project at the GEGIS Hackathon 2026.",
       "The dashboard analyses 77,381 birth records from Kenya's Demographic and Health Survey. Interactive county maps and charts show where risk is highest, and the findings turn into clear policy insights.",
     ],
-    media: null,
+    media: getProjectMedia("mamashield", { video: false }),
   },
   // A new project needs no component changes. After `npm run media -- <slug>`:
   //
@@ -183,7 +185,7 @@ export const projects: readonly Project[] = [
   //   stack: ["Next.js", "TypeScript"],
   //   liveUrl: "https://example.com/",
   //   body: ["What the app does.", "Who it helps, and how."],
-  //   media: getProjectMedia("new-project"), // or null for the placeholder
+  //   media: getProjectMedia("new-project"), // { video: false } if it has no video
   // },
 ];
 
@@ -196,6 +198,7 @@ export const projectPageCopy: ProjectPageCopy = {
   opensInNewTab: "(opens in a new tab)",
   playVideo: "Play video",
   pauseVideo: "Pause video",
+  coverAlt: "website shown on a laptop",
   previewComingSoon: "Preview coming soon",
   titleSuffix: "Philip Ondieki",
 };

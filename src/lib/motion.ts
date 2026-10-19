@@ -239,6 +239,9 @@ export const projectPage = {
   textRevealRatio: 0.2,
   /** The video pauses below this visible share. */
   mediaPauseThreshold: 0.25,
+  /** The video fades in over the cover when it first plays. */
+  videoFadeIn: 400,
+  videoFadeEasing: easing.out,
 } as const;
 
 /** Home <-> project page transitions (View Transitions API, with a fade fallback). */

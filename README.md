@@ -43,7 +43,7 @@ npm run media -- eveshield eveshieldpreview.webm eveshield2.png
 npm run media -- nairobialert nairobialertpreview.webm nairobialert.png
 ```
 
-Siledge and MamaShield have no media yet (`media: null`) and show a placeholder.
+Covers are separate: `public/media/work/<slug>/<slug>-cover-{720,1280,2560}.webp` (16:9). The homepage shows only covers (no video); the project page shows the cover with the video fading in over it. MamaShield has a cover and no video.
 
 For each slug, `scripts/encode-media.sh` writes four files to `public/media/<slug>/`:
 
@@ -58,7 +58,7 @@ The script prints each file's size and exits non-zero if one is over budget. Sou
 
 ## How to add a project
 
-1. **Media (optional).** Put the source video and poster in the repository root, then run `npm run media -- <slug> <video> <poster>` and check that every file is within budget. Output goes to `public/media/<slug>/`. No media yet? Skip this step and set `media: null`: the row, the card and the project page show a placeholder (the project name, then "Preview coming soon").
+1. **Media.** Add the cover as `public/media/work/<slug>/<slug>-cover-{720,1280,2560}.webp` (16:9). For a video, put the source in the repository root, run `npm run media -- <slug> <video> <poster>` and check every file is within budget (output in `public/media/<slug>/`). With no video, use `getProjectMedia("<slug>", { video: false })`: the project page shows the cover only.
 2. **Data.** Add an entry to `projects` in `src/data/projects.ts`, in the position it should appear within its group. There is a commented example in that file.
    - `group`: `"production"` or `"hackathon"`. Groups render in the order of `projectGroups`, each with a divider and its label. Each group's header sits in its first project's stage.
    - `reveal`: the row's scroll effect, one of `curtain`, `tilt`, `blinds`, `iris`, `counterSlide`, `diagonalWipe`, `stack` (see [Row reveals](#row-reveals)). `cardMorph` is only for the featured project.
@@ -105,7 +105,7 @@ src/
     work/     WorkStack, WorkRow, WorkMedia, RevealFrame, GroupHeader,
               ProjectLink, ProjectTags
     motion/   TypingText, MaskReveal, CardMorph, FadeIn, RouteFade, DrawLine
-    media/    LazyVideo, Poster, MediaPlaceholder
+    media/    Poster (the cover <img>), MediaPlaceholder (fallback)
   hooks/      useInView, useReducedMotion, useMediaQuery, useNetworkQuality,
               useScrollScheduler, usePageVisibility, useFreeSpace,
               useRevealGate, useIncomingTransition
@@ -150,7 +150,7 @@ Every duration, easing, stagger, scale range, bounce value and typing speed live
 
 The preview card and the featured project's frame are one object. `featuredProjectSlug` in `src/data/home.ts` picks the project.
 
-- **At the top:** the card rises under the strip 1.6s after load, holds, then drops away, up to 10 times. The frame stays hidden. The card shows the same poster file and crop as the frame.
+- **At the top:** the card rises under the strip 1.6s after load, holds, then drops away, up to 10 times. The frame stays hidden. The card shows the same cover and crop as the frame.
 - **First scroll:** in the same frame, the card is retired and the frame takes its exact spot and size. If the card was mid-bounce or hidden, the frame rises into the spot in 300ms.
 - **Scrolling down:** until the Siledge stage pins under the header (smoothstep), the frame grows and travels into the row. It's a FLIP transform from the card's rect to the frame's own rect, both measured in document coordinates outside the scroll frame. The corner radius goes from 10px to 6px and the 1px border fades out, both counter-scaled so they look right at every size.
 - **Row text and video:** the text and divider reveal when the morph is 70% done. The video is attached at that point and plays only at full size.

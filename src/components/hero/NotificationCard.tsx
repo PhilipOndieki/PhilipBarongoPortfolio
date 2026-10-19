@@ -17,7 +17,7 @@ import {
 import type { ProjectMedia } from "@/types";
 
 interface NotificationCardProps {
-  /** The featured project's media (poster only, never video), or null for its placeholder. */
+  /** The featured project's media (its cover only, never video), or null for the placeholder. */
   readonly media: ProjectMedia | null;
   readonly name: string;
   readonly placeholderLabel: string;
@@ -27,6 +27,9 @@ interface NotificationCardProps {
   readonly heroRef: RefObject<HTMLElement | null>;
   readonly stripRef: RefObject<HTMLElement | null>;
 }
+
+/** The card is small: the two smaller covers are enough. */
+const CARD_COVER_WIDTHS = ["720", "1280"] as const;
 
 interface Size {
   readonly width: number;
@@ -336,10 +339,10 @@ export function NotificationCard({
       {media ? (
         <Poster
           media={media}
-          width={size.width}
-          height={size.height}
+          widths={CARD_COVER_WIDTHS}
+          sizes={`${card.size.desktop.width}px`}
           loading="eager"
-          className="absolute inset-0 h-full w-full object-cover object-center"
+          className="absolute inset-0 h-full w-full"
         />
       ) : (
         <MediaPlaceholder name={name} label={placeholderLabel} />
