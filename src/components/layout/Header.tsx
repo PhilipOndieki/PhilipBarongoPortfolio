@@ -16,32 +16,49 @@ interface HeaderProps {
   readonly triggerId?: string;
 }
 
-/** Minimum space between the typed name and "Contact". */
+/** Minimum space between the typed name and the links on the right. */
 const NAME_GAP = 16;
 
 export function Header({ content, triggerId = HERO_NAME_ID }: HeaderProps) {
   const headerRef = useRef<HTMLElement>(null);
   const rowRef = useRef<HTMLDivElement>(null);
-  const contactRef = useRef<HTMLAnchorElement>(null);
+  const actionsRef = useRef<HTMLDivElement>(null);
   const fullNameRef = useRef<HTMLSpanElement>(null);
 
   const [headerHeight, setHeaderHeight] = useState(0);
   const [fitsFullName, setFitsFullName] = useState(false);
   const [pastHeroName, setPastHeroName] = useState(false);
   const [nameEmpty, setNameEmpty] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const reducedMotion = useReducedMotion();
 
-  // Measure the header, and whether the full name fits beside "Contact".
+  // Show "Admin" only to the signed-in admin. Visitors without a Supabase
+  // session cookie never call the server.
+  useEffect(() => {
+    if (!document.cookie.split("; ").some((c) => c.startsWith("sb-"))) return;
+    let live = true;
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((res) => (res.ok ? (res.json() as Promise<{ admin?: boolean }>) : null))
+      .then((json) => {
+        if (live && json?.admin) setIsAdmin(true);
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  // Measure the header, and whether the full name fits beside the links.
   useEffect(() => {
     const header = headerRef.current;
     const row = rowRef.current;
-    const contact = contactRef.current;
+    const actions = actionsRef.current;
     const fullName = fullNameRef.current;
-    if (!header || !row || !contact || !fullName) return;
+    if (!header || !row || !actions || !fullName) return;
 
     const measure = () => {
       const available =
-        contact.getBoundingClientRect().left - row.getBoundingClientRect().left - NAME_GAP;
+        actions.getBoundingClientRect().left - row.getBoundingClientRect().left - NAME_GAP;
       setHeaderHeight(header.offsetHeight);
       setFitsFullName(fullName.offsetWidth <= available);
     };
@@ -49,6 +66,7 @@ export function Header({ content, triggerId = HERO_NAME_ID }: HeaderProps) {
     const observer = new ResizeObserver(measure);
     observer.observe(header);
     observer.observe(row);
+    observer.observe(actions);
     return () => observer.disconnect();
   }, []);
 
@@ -108,14 +126,23 @@ export function Header({ content, triggerId = HERO_NAME_ID }: HeaderProps) {
               {content.headerName}
             </span>
           </Link>
-          <a
-            ref={contactRef}
-            href={content.contact.href}
-            data-track="contact"
-            className="-mr-3 inline-flex h-11 touch-manipulation items-center px-3 text-[15px] leading-none text-fg transition-opacity duration-200 hover:opacity-60"
-          >
-            {content.contact.label}
-          </a>
+          <div ref={actionsRef} className="-mr-3 flex items-center">
+            {isAdmin && (
+              <Link
+                href="/admin/leads"
+                className="inline-flex h-11 touch-manipulation items-center px-3 text-[15px] leading-none text-fg transition-opacity duration-200 hover:opacity-60"
+              >
+                Admin
+              </Link>
+            )}
+            <a
+              href={content.contact.href}
+              data-track="contact"
+              className="inline-flex h-11 touch-manipulation items-center px-3 text-[15px] leading-none text-fg transition-opacity duration-200 hover:opacity-60"
+            >
+              {content.contact.label}
+            </a>
+          </div>
         </div>
       </Container>
     </header>

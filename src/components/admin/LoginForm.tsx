@@ -4,13 +4,13 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { btn, btnPrimary, field } from "./styles";
 
-export function LoginForm() {
+export function LoginForm({ initialNote = "" }: { readonly initialNote?: string }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [note, setNote] = useState("");
+  const [note, setNote] = useState(initialNote);
 
   async function post(url: string, body: object) {
     const res = await fetch(url, {
