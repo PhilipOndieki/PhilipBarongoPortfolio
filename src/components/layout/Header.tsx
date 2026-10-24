@@ -111,6 +111,7 @@ export function Header({ content, triggerId = HERO_NAME_ID }: HeaderProps) {
           <a
             ref={contactRef}
             href={content.contact.href}
+            data-track="contact"
             className="-mr-3 inline-flex h-11 touch-manipulation items-center px-3 text-[15px] leading-none text-fg transition-opacity duration-200 hover:opacity-60"
           >
             {content.contact.label}

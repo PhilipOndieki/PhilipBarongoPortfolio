@@ -2,7 +2,7 @@
 
 Philip Ondieki's portfolio: a dark, minimal first screen, a header that types the name on scroll, a small preview card that bounces up under the strip and becomes the featured project's frame, then eight projects in two groups, each row with its own scroll reveal, an About section, a footer on every page, and a page per project. Divider lines draw themselves as they scroll into view.
 
-- Next.js 16 (App Router) with static export (`output: "export"`), deployed on Vercel
+- Next.js 16 (App Router), deployed on Vercel. Public pages are prerendered; the private `/admin` Lead Queue uses server routes.
 - TypeScript (strict, `noUncheckedIndexedAccess`), ESLint (`next/core-web-vitals` and TypeScript rules), Prettier
 - Tailwind CSS v4. Tokens are CSS variables in `globals.css`, mapped to class names in `tailwind.config.ts`.
 - Inter via `next/font/google` (latin, weights 400 and 500)
@@ -23,12 +23,25 @@ npm install          # install dependencies
 npm run dev          # dev server at http://localhost:3000
 npm run lint         # ESLint, fails on any warning
 npm run typecheck    # TypeScript, no emit
-npm run build        # static site in ./out
-npm start            # serve ./out at http://localhost:3000
+npm run build        # production build
+npm start            # serve the build at http://localhost:3000
 npm run format       # Prettier
 ```
 
 > The build downloads Inter from Google Fonts, so it needs network access to `fonts.googleapis.com`.
+
+## Lead Queue (private, /admin/leads)
+
+Finds Nairobi businesses with no website on OpenStreetMap, drafts a WhatsApp message with the Claude API, and tracks results. Philip sends every message himself.
+
+1. Create a Supabase project. Run `supabase/migrations/0001_leads.sql` in the SQL editor.
+2. Supabase > Authentication > Email templates > Magic Link: add `{{ .Token }}` to the email, so the iPhone Home Screen app can sign in with the code.
+3. Supabase > Authentication > URL configuration: set the site URL to `https://philipondieki.co.ke` and add `https://philipondieki.co.ke/auth/callback` and `http://localhost:3000/auth/callback` to the redirect URLs.
+4. Copy `.env.example` to `.env.local` and fill it in. Add the same variables in Vercel > Settings > Environment Variables.
+5. Import the current leads: `npm run import-leads -- scripts/leads-import.json`. The JSON file is git-ignored, because this repo is public.
+6. Open `/admin/login`. On iPhone: Safari > Share > Add to Home Screen.
+
+Lead links use `?r=<slug>`. `LeadTracker` records one visit per session and a tap on the header Contact link (`data-track="contact"`) through `/api/t`. It stores only slug, kind and time.
 
 ## Encode project media
 

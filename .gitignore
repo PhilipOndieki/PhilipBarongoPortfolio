@@ -4,3 +4,7 @@ out/
 next-env.d.ts
 *.tsbuildinfo
 .DS_Store
+.env*
+!.env.example
+# Lead data stays local. This repo is public.
+scripts/leads-import.json

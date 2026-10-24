@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import type { ReactNode } from "react";
 import { Footer } from "@/components/layout/Footer";
 import { RouteTransitions } from "@/components/layout/RouteTransitions";
+import { SiteFooterGate } from "@/components/layout/SiteFooterGate";
+import { LeadTracker } from "@/components/tracking/LeadTracker";
 import { home } from "@/data/home";
 import { projects } from "@/data/projects";
 import { motionStyles } from "@/lib/motion";
@@ -55,8 +57,11 @@ export default function RootLayout({ children }: RootLayoutProps) {
       </head>
       <body className="bg-ink font-sans text-fg">
         <RouteTransitions />
+        <LeadTracker />
         {children}
-        <Footer />
+        <SiteFooterGate>
+          <Footer />
+        </SiteFooterGate>
       </body>
     </html>
   );
