@@ -18,6 +18,12 @@ try {
 
 const File = z.object({
   city: z.string().min(1),
+  settings: z
+    .object({
+      interval_min: z.number().int().min(1).max(1440),
+      last_sent_at: z.string().nullish(),
+    })
+    .optional(),
   leads: z
     .array(
       z.object({
@@ -38,6 +44,7 @@ const File = z.object({
           "not_interested",
           "skipped",
         ]),
+        sent_at: z.string().nullish(),
       }),
     )
     .min(1),
@@ -62,7 +69,7 @@ if (!parsed.success) {
   process.exit(1);
 }
 
-const { city, leads } = parsed.data;
+const { city, leads, settings } = parsed.data;
 const rows = leads.map((l) => ({ ...l, city }));
 const db = createClient(url, key, { auth: { persistSession: false } });
 const { data, error } = await db.from("leads").upsert(rows, { onConflict: "slug" }).select("slug");
@@ -71,3 +78,12 @@ if (error) {
   process.exit(1);
 }
 console.log(`Imported ${data?.length ?? 0} leads.`);
+
+if (settings) {
+  const { error: settingsError } = await db.from("settings").update(settings).eq("id", 1);
+  if (settingsError) {
+    console.error("Settings update failed:", settingsError.message);
+    process.exit(1);
+  }
+  console.log(`Settings updated: ${settings.interval_min} min gap.`);
+}
