@@ -21,7 +21,7 @@ const SERVERS = [
   "https://overpass.kumi.systems/api/interpreter",
   "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
 ];
-const UA = "philipondieki-lead-finder/1.0 (contact: info@philipondieki.co.ke)";
+const UA = "philipondieki-lead-finder/1.0 (contact: philipbarongo30@gmail.com)";
 /** Stop trying new servers after this, so the route ends inside maxDuration. */
 const BUDGET_MS = 54_000;
 

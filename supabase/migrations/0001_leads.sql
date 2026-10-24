@@ -1,5 +1,5 @@
 -- Lead Agent schema. Run once in the Supabase SQL editor.
--- If ADMIN_EMAIL is not info@philipondieki.co.ke, change the email in the policies below.
+-- If ADMIN_EMAIL is not philipbarongo30@gmail.com, change the email in the policies below.
 
 create extension if not exists pgcrypto;
 
@@ -52,13 +52,13 @@ alter table public.settings enable row level security;
 alter table public.taps enable row level security;
 
 create policy admin_all_leads on public.leads for all to authenticated
-  using ((auth.jwt() ->> 'email') = 'info@philipondieki.co.ke')
-  with check ((auth.jwt() ->> 'email') = 'info@philipondieki.co.ke');
+  using ((auth.jwt() ->> 'email') = 'philipbarongo30@gmail.com')
+  with check ((auth.jwt() ->> 'email') = 'philipbarongo30@gmail.com');
 create policy admin_all_settings on public.settings for all to authenticated
-  using ((auth.jwt() ->> 'email') = 'info@philipondieki.co.ke')
-  with check ((auth.jwt() ->> 'email') = 'info@philipondieki.co.ke');
+  using ((auth.jwt() ->> 'email') = 'philipbarongo30@gmail.com')
+  with check ((auth.jwt() ->> 'email') = 'philipbarongo30@gmail.com');
 create policy admin_read_taps on public.taps for select to authenticated
-  using ((auth.jwt() ->> 'email') = 'info@philipondieki.co.ke');
+  using ((auth.jwt() ->> 'email') = 'philipbarongo30@gmail.com');
 -- No public insert policy on taps. Inserts go through /api/t with the service role key.
 
 alter publication supabase_realtime add table public.leads, public.settings, public.taps;
