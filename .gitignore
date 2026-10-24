@@ -8,3 +8,4 @@ next-env.d.ts
 !.env.example
 # Lead data stays local. This repo is public.
 scripts/leads-import.json
+scripts/leads-import*.json
