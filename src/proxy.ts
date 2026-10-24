@@ -7,7 +7,19 @@ import { isAdminEmail, supabaseAnonKey, supabaseUrl } from "@/lib/supabase/env";
  * is not the admin to /admin/login. API routes check the session again.
  */
 export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname, searchParams } = request.nextUrl;
+
+  // Supabase falls back to the site root when the callback URL is not on its
+  // redirect list. Pass a sign-in code on to the callback instead of dropping it.
+  if (!pathname.startsWith("/admin")) {
+    if (searchParams.has("code") || searchParams.has("token_hash")) {
+      const target = new URL("/auth/callback", request.url);
+      target.search = request.nextUrl.search;
+      return NextResponse.redirect(target);
+    }
+    return NextResponse.next();
+  }
+
   const isLogin = pathname === "/admin/login";
   let response = NextResponse.next({ request });
 
@@ -39,5 +51,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/"],
 };
